@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, Clock, User, Tag, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink } from 'lucide-react'
+import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink } from 'lucide-react'
 import { Post, Comment } from '@/types'
 
 export default function PostPage() {
@@ -14,19 +14,10 @@ export default function PostPage() {
   const [loading, setLoading] = useState(true)
   const [commentContent, setCommentContent] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ username: string; role?: string } | null>(null)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
-    fetchPost()
-    fetchComments()
-  }, [params.id])
-
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     try {
       const response = await fetch(`/api/posts/${params.id}`)
       const data = await response.json()
@@ -41,9 +32,9 @@ export default function PostPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const response = await fetch(`/api/posts/${params.id}/comments`)
       const data = await response.json()
@@ -51,7 +42,18 @@ export default function PostPage() {
     } catch (error) {
       console.error('Error fetching comments:', error)
     }
-  }
+  }, [params.id])
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
+    fetchPost()
+    fetchComments()
+  }, [fetchPost, fetchComments])
+
+
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()

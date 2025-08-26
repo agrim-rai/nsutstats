@@ -9,7 +9,7 @@ import { Post } from '@/types'
 export default function Dashboard() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ username: string; role?: string } | null>(null)
   const [error, setError] = useState('')
   const router = useRouter()
 

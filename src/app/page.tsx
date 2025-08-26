@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Calendar, Clock, User, Tag, Search, Filter, BarChart3, TrendingUp, Database } from 'lucide-react'
+import { Calendar, Clock, User, Search, BarChart3, TrendingUp, Database } from 'lucide-react'
 import { Post, Category, Tag as TagType } from '@/types'
 
 export default function Home() {
@@ -14,13 +14,7 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<TagType[]>([])
 
-  useEffect(() => {
-    fetchPosts()
-    fetchCategories()
-    fetchTags()
-  }, [searchTerm, selectedCategory, selectedTag])
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
@@ -36,9 +30,9 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchTerm, selectedCategory, selectedTag])
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch('/api/categories')
       const data = await response.json()
@@ -46,9 +40,9 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching categories:', error)
     }
-  }
+  }, [])
 
-  const fetchTags = async () => {
+  const fetchTags = useCallback(async () => {
     try {
       const response = await fetch('/api/tags')
       const data = await response.json()
@@ -56,7 +50,13 @@ export default function Home() {
     } catch (error) {
       console.error('Error fetching tags:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchPosts()
+    fetchCategories()
+    fetchTags()
+  }, [fetchPosts, fetchCategories, fetchTags])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

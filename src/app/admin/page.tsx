@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, Lock, User, Shield } from 'lucide-react'
+import { Eye, EyeOff, Lock, User } from 'lucide-react'
 
 export default function AdminLogin() {
   const [formData, setFormData] = useState({
