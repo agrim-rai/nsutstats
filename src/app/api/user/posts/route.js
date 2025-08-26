@@ -50,7 +50,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Get user posts error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'server error ' },
       { status: 500 }
     );
   }

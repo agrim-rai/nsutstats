@@ -47,7 +47,7 @@ export async function GET(request, { params }) {
   } catch (error) {
     console.error('Get comments error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'server error ' },
       { status: 500 }
     );
   }
@@ -117,7 +117,7 @@ export async function POST(request, { params }) {
   } catch (error) {
     console.error('Create comment error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'server error ' },
       { status: 500 }
     );
   }

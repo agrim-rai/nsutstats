@@ -31,7 +31,7 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold text-gray-900">
-              NSUT Stats - ML Data Analysis & Statistics
+              NSUT Stats
             </Link>
           </div>
           
@@ -42,10 +42,6 @@ export default function Navbar() {
             <Link href="/categories" className="text-gray-700 hover:text-gray-900 transition-colors">
               Categories
             </Link>
-            <Link href="/tags" className="text-gray-700 hover:text-gray-900 transition-colors">
-              Tags
-            </Link>
-            
             {user ? (
               <>
                 {user.role === 'admin' && (
@@ -84,9 +80,6 @@ export default function Navbar() {
               <div className="flex items-center space-x-4">
                 <Link href="/login" className="text-gray-700 hover:text-gray-900 transition-colors">
                   Login
-                </Link>
-                <Link href="/admin" className="text-gray-700 hover:text-gray-900 transition-colors">
-                  Admin
                 </Link>
                 <Link 
                   href="/register" 

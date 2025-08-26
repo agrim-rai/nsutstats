@@ -39,7 +39,7 @@ export default function Categories() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Data Analysis Categories</h1>
+        <h1 className="text-4xl font-bold text-white-900 mb-4">Data Analysis Categories</h1>
         <p className="text-xl text-gray-600">
           Explore statistical analysis and ML content by category
         </p>
@@ -47,9 +47,6 @@ export default function Categories() {
 
       {categories.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <Hash className="h-16 w-16 mx-auto" />
-          </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No categories available</h3>
           <p className="text-gray-600">Categories will appear here once analytical content is published.</p>
         </div>

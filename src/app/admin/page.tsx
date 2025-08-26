@@ -62,16 +62,10 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <Shield className="h-12 w-12 text-blue-600" />
-          </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">NSUT Stats</h1>
           <h2 className="text-2xl font-semibold text-gray-700">
-            Admin Access
+            Admin area
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to access administrative functions
-          </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -84,7 +78,7 @@ export default function AdminLogin() {
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Admin Username
+                Username
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />

@@ -81,7 +81,7 @@ export default function Home() {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-4xl font-bold text-white-900 mb-4">
           Welcome to NSUT Stats
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-6">
@@ -165,10 +165,7 @@ export default function Home() {
       {/* Posts Grid */}
       {posts.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <Search className="h-16 w-16 mx-auto" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No articles found</h3>
+          <h3 className="text-xl font-semibold text-white-900 mb-2">No articles found</h3>
           <p className="text-gray-600">Try adjusting your search criteria or filters to find relevant content.</p>
         </div>
       ) : (

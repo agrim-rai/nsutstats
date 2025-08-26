@@ -19,7 +19,7 @@ export async function GET() {
   } catch (error) {
     console.error('Get tags error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'server error ' },
       { status: 500 }
     );
   }

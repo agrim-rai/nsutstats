@@ -31,7 +31,7 @@ export async function GET(request, { params }) {
   } catch (error) {
     console.error('Get post error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'server error ' },
       { status: 500 }
     );
   }
@@ -91,7 +91,7 @@ export async function PUT(request, { params }) {
   } catch (error) {
     console.error('Update post error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'server error ' },
       { status: 500 }
     );
   }
@@ -148,7 +148,7 @@ export async function DELETE(request, { params }) {
   } catch (error) {
     console.error('Delete post error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'server error ' },
       { status: 500 }
     );
   }
