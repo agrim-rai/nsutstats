@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, X, Upload, File, Image, Code, Trash2 } from 'lucide-react'
+import { Plus, X, Upload, File, Image, Code, Trash2, Archive, BookOpen } from 'lucide-react'
 import RichTextEditor from '@/components/RichTextEditor'
 import { uploadImageToS3 } from '@/lib/imageUpload'
 
@@ -198,9 +198,11 @@ export default function CreatePost() {
     }))
   }
 
-  const getFileIcon = (fileType: string) => {
+  const getFileIcon = (fileType: string, fileName: string = '') => {
     if (fileType.startsWith('image/')) return <Image className="h-4 w-4" />
     if (fileType.includes('text') || fileType.includes('javascript') || fileType.includes('css')) return <Code className="h-4 w-4" />
+    if (fileType.includes('zip') || fileName.toLowerCase().endsWith('.zip')) return <Archive className="h-4 w-4" />
+    if (fileType.includes('ipynb') || fileName.toLowerCase().endsWith('.ipynb')) return <BookOpen className="h-4 w-4" />
     return <File className="h-4 w-4" />
   }
 
@@ -439,7 +441,7 @@ export default function CreatePost() {
               {formData.attachments.map((attachment) => (
                 <div key={attachment.fileName} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    {getFileIcon(attachment.fileType)}
+                    {getFileIcon(attachment.fileType, attachment.originalName)}
                     <div>
                       <p className="text-sm font-medium text-gray-900">{attachment.originalName}</p>
                       <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>

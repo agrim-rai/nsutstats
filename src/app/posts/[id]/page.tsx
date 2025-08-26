@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink } from 'lucide-react'
+import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink, Archive, BookOpen } from 'lucide-react'
 import { Post, Comment } from '@/types'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import RichContentRenderer from '@/components/RichContentRenderer'
@@ -145,9 +145,11 @@ export default function PostPage() {
     })
   }
 
-  const getFileIcon = (fileType: string) => {
+  const getFileIcon = (fileType: string, fileName: string = '') => {
     if (fileType.startsWith('image/')) return <Image className="h-5 w-5" />
     if (fileType.includes('text') || fileType.includes('javascript') || fileType.includes('css')) return <Code className="h-5 w-5" />
+    if (fileType.includes('zip') || fileName.toLowerCase().endsWith('.zip')) return <Archive className="h-5 w-5" />
+    if (fileType.includes('ipynb') || fileName.toLowerCase().endsWith('.ipynb')) return <BookOpen className="h-5 w-5" />
     return <File className="h-5 w-5" />
   }
 
@@ -178,40 +180,40 @@ export default function PostPage() {
   const isAdmin = user && user.role === 'admin'
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8">
       {/* Post Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <span className="px-4 py-2 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
               {post.category}
             </span>
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
+            <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-500">
               <Calendar className="h-4 w-4" />
               <span>{formatDate(post.createdAt)}</span>
             </div>
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
+            <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-500">
               <Clock className="h-4 w-4" />
               <span>{post.readTime} min read</span>
             </div>
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
+            <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-500">
               <Eye className="h-4 w-4" />
               <span>{post.views} views</span>
             </div>
           </div>
           
           {isAdmin && (
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               <Link
                 href={`/posts/${post._id}/edit`}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Edit className="h-4 w-4" />
                 <span>Edit</span>
               </Link>
               <button
                 onClick={handleDeletePost}
-                className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
                 <span>Delete</span>
@@ -220,7 +222,7 @@ export default function PostPage() {
           )}
         </div>
 
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
         
         <div className="flex items-center space-x-4 mb-6">
           <div className="flex items-center space-x-2">
@@ -234,7 +236,7 @@ export default function PostPage() {
             <img
               src={post.featuredImage}
               alt={post.title}
-              className="w-full h-80 object-cover rounded-xl shadow-lg"
+              className="w-full h-48 md:h-80 object-cover rounded-xl shadow-lg"
             />
           </div>
         )}
@@ -271,11 +273,11 @@ export default function PostPage() {
             <File className="h-5 w-5 mr-2" />
             Attachments ({post.attachments.length})
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {post.attachments.map((attachment) => (
-              <div key={attachment.fileName} className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+              <div key={attachment.fileName} className="flex items-center justify-between p-3 sm:p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-3">
-                  {getFileIcon(attachment.fileType)}
+                  {getFileIcon(attachment.fileType, attachment.originalName)}
                   <div>
                     <p className="text-sm font-medium text-gray-900">{attachment.originalName}</p>
                     <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
@@ -310,7 +312,7 @@ export default function PostPage() {
       <div className="border-t pt-8">
         <div className="flex items-center space-x-2 mb-6">
           <MessageCircle className="h-5 w-5" />
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">
             Comments ({comments.length})
           </h2>
         </div>
@@ -318,7 +320,7 @@ export default function PostPage() {
         {/* Comment Form */}
         {user ? (
           <form onSubmit={handleSubmitComment} className="mb-8">
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <textarea
                 value={commentContent}
                 onChange={(e) => setCommentContent(e.target.value)}
@@ -330,7 +332,7 @@ export default function PostPage() {
               <button
                 type="submit"
                 disabled={submittingComment || !commentContent.trim()}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed self-end transition-colors"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed sm:self-end transition-colors"
               >
                 <Send className="h-4 w-4" />
               </button>
@@ -354,17 +356,17 @@ export default function PostPage() {
             <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
           ) : (
             comments.map((comment) => (
-              <div key={comment._id} className="bg-gray-50 p-6 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
+              <div key={comment._id} className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
                   <div className="flex items-center space-x-3">
                     <User className="h-5 w-5 text-gray-500" />
                     <span className="font-medium text-gray-900">
                       {comment.author.username}
                     </span>
-                    <span className="text-sm text-gray-500">
-                      {formatDate(comment.createdAt)}
-                    </span>
                   </div>
+                  <span className="text-sm text-gray-500 sm:ml-auto">
+                    {formatDate(comment.createdAt)}
+                  </span>
                 </div>
                 <p className="text-gray-700 leading-relaxed">{comment.content}</p>
               </div>

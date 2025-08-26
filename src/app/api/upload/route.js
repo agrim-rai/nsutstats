@@ -53,12 +53,28 @@ export async function POST(request) {
       'application/json',
       'application/javascript',
       'text/css',
-      'text/xml'
+      'text/xml',
+      'application/x-ipynb+json', // Jupyter Notebook
+      'application/zip',           // ZIP files
+      'application/x-zip-compressed', // Alternative ZIP MIME type
+      'application/octet-stream'   // Fallback for .ipynb files that might not have correct MIME type
     ];
 
-    if (!allowedTypes.includes(file.type)) {
+    // Additional validation for specific file extensions
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'txt', 'md', 'html', 'pdf', 'json', 'js', 'css', 'xml', 'ipynb', 'zip'];
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
       return NextResponse.json(
-        { error: 'File type not allowed' },
+        { error: 'File type not allowed. Supported types: images, documents, code files, Jupyter notebooks (.ipynb), and ZIP files' },
+        { status: 400 }
+      );
+    }
+    
+    // Special handling for .ipynb files
+    if (fileExtension === 'ipynb' && !file.type.includes('json') && file.type !== 'application/octet-stream') {
+      return NextResponse.json(
+        { error: 'Invalid Jupyter notebook file' },
         { status: 400 }
       );
     }
