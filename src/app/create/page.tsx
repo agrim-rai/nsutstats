@@ -23,7 +23,8 @@ export default function CreatePost() {
     tags: [] as string[],
     featuredImage: '',
     status: 'published' as 'draft' | 'published',
-    attachments: [] as Attachment[]
+    attachments: [] as Attachment[],
+    inlineImages: {} as Record<string, any>
   })
   const [newTag, setNewTag] = useState('')
   const [loading, setLoading] = useState(false)
@@ -91,7 +92,8 @@ export default function CreatePost() {
         ...formData,
         content: excerpt, // Use extracted text as content
         excerpt: excerpt.substring(0, 200) + (excerpt.length > 200 ? '...' : ''),
-        readTime: Math.ceil(excerpt.split(/\s+/).length / 200) // Word count divided by 200 words per minute
+        readTime: Math.ceil(excerpt.split(/\s+/).length / 200), // Word count divided by 200 words per minute
+        inlineImages: Object.values(formData.inlineImages) // Convert to array for backend
       }
 
       const response = await fetch('/api/posts', {
@@ -273,6 +275,17 @@ export default function CreatePost() {
     }
   }
 
+  // Handle inline image metadata tracking
+  const handleInlineImageUpload = (imageId: string, imageData: any) => {
+    setFormData(prev => ({
+      ...prev,
+      inlineImages: {
+        ...prev.inlineImages,
+        [imageId]: imageData
+      }
+    }))
+  }
+
   if (!user) {
     return (
       <div className="flex justify-center items-center min-h-64">
@@ -395,7 +408,8 @@ export default function CreatePost() {
             content={formData.richContent}
             onChange={handleRichContentChange}
             onImageUpload={handleImageUpload}
-            placeholder="Write your post content here... You can format text, add images, and insert code blocks."
+            onInlineImageUpload={handleInlineImageUpload}
+            placeholder="Write your post content here... You can format text, add images, and insert code blocks. You can also paste images directly from your clipboard!"
             className="min-h-[400px]"
           />
           <div className="mt-2 text-sm text-gray-500">

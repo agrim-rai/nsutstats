@@ -30,3 +30,32 @@ export function generateImageFileName(originalName: string): string {
   const extension = originalName.split('.').pop()
   return `nsutstats/images/${timestamp}-${randomString}.${extension}`
 }
+
+export const uploadInlineImageToS3 = async (file: File): Promise<{ imageId: string, fileUrl: string }> => {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const token = localStorage.getItem('token')
+  if (!token) {
+    throw new Error('Authentication required')
+  }
+
+  const response = await fetch('/api/upload/inline-image', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to upload inline image')
+  }
+
+  const data = await response.json()
+  return {
+    imageId: data.imageId,
+    fileUrl: data.file.fileUrl
+  }
+}

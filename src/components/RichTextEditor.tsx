@@ -21,6 +21,7 @@ import {
   Undo,
   Redo
 } from 'lucide-react'
+import { uploadInlineImageToS3 } from '@/lib/imageUpload'
 
 // Import languages for syntax highlighting
 import javascript from 'highlight.js/lib/languages/javascript'
@@ -47,11 +48,12 @@ interface RichTextEditorProps {
   content: string
   onChange: (content: string) => void
   onImageUpload?: (file: File) => Promise<string>
+  onInlineImageUpload?: (imageId: string, imageData: any) => void
   placeholder?: string
   className?: string
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+const MenuBar = ({ editor, onImageUpload, isUploading }: { editor: any, onImageUpload?: () => void, isUploading: boolean }) => {
   if (!editor) {
     return null
   }
@@ -163,21 +165,9 @@ const MenuBar = ({ editor }: { editor: any }) => {
         <div className="w-px h-6 bg-gray-300 mx-2" />
         
         <button
-          onClick={() => {
-            const input = document.createElement('input')
-            input.type = 'file'
-            input.accept = 'image/*'
-            input.onchange = async (e) => {
-              const file = (e.target as HTMLInputElement).files?.[0]
-              if (file) {
-                // This will be handled by the parent component
-                const url = URL.createObjectURL(file)
-                editor.chain().focus().setImage({ src: url }).run()
-              }
-            }
-            input.click()
-          }}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+          onClick={onImageUpload}
+          disabled={isUploading}
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
           title="Insert Image"
         >
           <ImageIcon className="h-4 w-4" />
@@ -191,14 +181,51 @@ export default function RichTextEditor({
   content, 
   onChange, 
   onImageUpload,
+  onInlineImageUpload,
   placeholder = "Start writing your content...",
   className = ""
 }: RichTextEditorProps) {
   const [isMounted, setIsMounted] = React.useState(false)
+  const [isUploading, setIsUploading] = React.useState(false)
 
   React.useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  const handlePasteImage = React.useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) return false
+    
+    setIsUploading(true)
+    try {
+      const { imageId, fileUrl } = await uploadInlineImageToS3(file)
+      
+      // Store image metadata for later saving with post
+      if (onInlineImageUpload) {
+        onInlineImageUpload(imageId, {
+          imageId,
+          fileName: `${imageId}-${file.name}`,
+          originalName: file.name,
+          fileUrl,
+          fileSize: file.size,
+          fileType: file.type,
+        })
+      }
+      
+      // Insert image then attach special data attribute for tracking
+      editor?.chain()
+        .focus()
+        .setImage({ src: fileUrl, alt: file.name })
+        .updateAttributes('image', { 'data-image-id': imageId })
+        .run()
+      
+      return true
+    } catch (error) {
+      console.error('Failed to upload pasted image:', error)
+      return false
+    } finally {
+      setIsUploading(false)
+    }
+  }, [onInlineImageUpload])
 
   const editor = useEditor({
     extensions: [
@@ -207,7 +234,7 @@ export default function RichTextEditor({
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'max-w-full h-auto rounded-lg shadow-md',
+          class: 'max-w-full h-auto rounded-lg shadow-md my-4',
         },
       }),
       CodeBlockLowlight.configure({
@@ -223,6 +250,22 @@ export default function RichTextEditor({
       attributes: {
         class: 'prose prose-lg max-w-none focus:outline-none p-4 min-h-[400px]',
       },
+      handlePaste: (view, event, slice) => {
+        const items = Array.from(event.clipboardData?.items || [])
+        
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile()
+            if (file) {
+              event.preventDefault()
+              handlePasteImage(file)
+              return true
+            }
+          }
+        }
+        
+        return false
+      },
     },
     onUpdate: ({ editor }) => {
       onChange(JSON.stringify(editor.getJSON()))
@@ -230,44 +273,45 @@ export default function RichTextEditor({
   })
 
   // Handle image uploads
-  const handleImageUpload = async (file: File) => {
-    if (onImageUpload) {
-      try {
-        const url = await onImageUpload(file)
-        editor?.chain().focus().setImage({ src: url }).run()
-      } catch (error) {
-        console.error('Failed to upload image:', error)
-      }
-    }
-  }
-
-  // Handle paste events for images
-  const handlePaste = (event: ClipboardEvent) => {
-    const items = event.clipboardData?.items
-    if (items) {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i]
-        if (item.type.indexOf('image') !== -1) {
-          const file = item.getAsFile()
-          if (file && onImageUpload) {
-            event.preventDefault()
-            handleImageUpload(file)
+  const handleImageUpload = React.useCallback(async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        setIsUploading(true)
+        try {
+          // Use inline image upload for consistency
+          const { imageId, fileUrl } = await uploadInlineImageToS3(file)
+          
+          // Store image metadata for later saving with post
+          if (onInlineImageUpload) {
+            onInlineImageUpload(imageId, {
+              imageId,
+              fileName: `${imageId}-${file.name}`,
+              originalName: file.name,
+              fileUrl,
+              fileSize: file.size,
+              fileType: file.type,
+            })
           }
+          
+          // Insert image then attach special data attribute for tracking
+          editor?.chain()
+            .focus()
+            .setImage({ src: fileUrl, alt: file.name })
+            .updateAttributes('image', { 'data-image-id': imageId })
+            .run()
+        } catch (error) {
+          console.error('Image upload failed:', error)
+        } finally {
+          setIsUploading(false)
         }
       }
     }
-  }
-
-  // Add paste event listener
-  React.useEffect(() => {
-    const editorElement = editor?.view.dom
-    if (editorElement) {
-      editorElement.addEventListener('paste', handlePaste)
-      return () => {
-        editorElement.removeEventListener('paste', handlePaste)
-      }
-    }
-  }, [editor, onImageUpload])
+    input.click()
+  }, [editor, onInlineImageUpload])
 
   if (!isMounted) {
     return (
@@ -301,7 +345,18 @@ export default function RichTextEditor({
 
   return (
     <div className={`border border-gray-300 rounded-lg overflow-hidden bg-white ${className}`}>
-      <MenuBar editor={editor} />
+      <MenuBar editor={editor} onImageUpload={handleImageUpload} isUploading={isUploading} />
+      
+      {/* Image Upload Status */}
+      {isUploading && (
+        <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm text-blue-600">Uploading image...</span>
+          </div>
+        </div>
+      )}
+      
       <div className="relative">
         <EditorContent editor={editor} />
         {!editor?.getText() && (
@@ -309,6 +364,11 @@ export default function RichTextEditor({
             {placeholder}
           </div>
         )}
+      </div>
+      
+      {/* Help text */}
+      <div className="px-4 pb-3 text-xs text-gray-500 border-t border-gray-200">
+        💡 Tip: You can paste images directly from your clipboard (Ctrl+V / Cmd+V) or use the image button above
       </div>
     </div>
   )

@@ -222,8 +222,7 @@ export default function PostPage() {
           )}
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
-        
+        <h1 className="text-3xl md:text-4xl font-bold text-white-900 mb-4">{post.title}</h1>
         <div className="flex items-center space-x-4 mb-6">
           <div className="flex items-center space-x-2">
             <User className="h-5 w-5 text-gray-500" />
@@ -258,7 +257,10 @@ export default function PostPage() {
       {/* Post Content */}
       <div className="mb-12">
         {post.richContent ? (
-          <RichContentRenderer content={post.richContent} />
+          <RichContentRenderer 
+            content={post.richContent} 
+            inlineImages={post.inlineImages || []}
+          />
         ) : (
           <div className="prose prose-lg max-w-none">
             <div className="whitespace-pre-wrap leading-relaxed text-gray-800">{post.content}</div>
@@ -312,7 +314,7 @@ export default function PostPage() {
       <div className="border-t pt-8">
         <div className="flex items-center space-x-2 mb-6">
           <MessageCircle className="h-5 w-5" />
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+          <h2 className="text-xl md:text-2xl font-bold text-white-900">
             Comments ({comments.length})
           </h2>
         </div>

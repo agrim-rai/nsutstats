@@ -76,7 +76,7 @@ export async function POST(request) {
     // Users can create posts (not restricted to admin only)
     console.log('Creating post for user:', { userId: user.userId, role: user.role });
     
-    const { title, content, richContent, category, tags, featuredImage, status, attachments, excerpt, readTime } = await request.json();
+    const { title, content, richContent, category, tags, featuredImage, status, attachments, excerpt, readTime, inlineImages } = await request.json();
     
     // Validation
     if (!title || !content || !category) {
@@ -95,6 +95,7 @@ export async function POST(request) {
       featuredImage: featuredImage || '',
       status: status || 'published',
       attachments: attachments || [],
+      inlineImages: inlineImages || [],
       excerpt: excerpt || content.substring(0, 200),
       readTime: readTime || Math.ceil(content.length / 200),
       author: user.userId

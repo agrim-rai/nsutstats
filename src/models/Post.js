@@ -1,5 +1,60 @@
 import mongoose from 'mongoose';
 
+const attachmentSchema = new mongoose.Schema({
+  fileName: {
+    type: String,
+    required: true
+  },
+  originalName: {
+    type: String,
+    required: true
+  },
+  fileUrl: {
+    type: String,
+    required: true
+  },
+  fileSize: {
+    type: Number,
+    required: true
+  },
+  fileType: {
+    type: String,
+    required: true
+  }
+})
+
+const inlineImageSchema = new mongoose.Schema({
+  imageId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  fileName: {
+    type: String,
+    required: true
+  },
+  originalName: {
+    type: String,
+    required: true
+  },
+  fileUrl: {
+    type: String,
+    required: true
+  },
+  fileSize: {
+    type: Number,
+    required: true
+  },
+  fileType: {
+    type: String,
+    required: true
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now
+  }
+})
+
 const postSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -46,17 +101,8 @@ const postSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  attachments: [{
-    fileName: String,
-    originalName: String,
-    fileUrl: String,
-    fileSize: Number,
-    fileType: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  attachments: [attachmentSchema],
+  inlineImages: [inlineImageSchema],
   readTime: {
     type: Number,
     default: 0

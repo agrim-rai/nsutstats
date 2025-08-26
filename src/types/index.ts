@@ -17,6 +17,16 @@ export interface Attachment {
   uploadedAt: string;
 }
 
+export interface InlineImage {
+  imageId: string;
+  fileName: string;
+  originalName: string;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+  uploadedAt: string;
+}
+
 export interface Post {
   _id: string;
   title: string;
@@ -29,6 +39,7 @@ export interface Post {
   status: 'draft' | 'published';
   featuredImage?: string;
   attachments?: Attachment[];
+  inlineImages?: InlineImage[];
   readTime: number;
   views: number;
   likes: string[];

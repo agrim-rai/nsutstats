@@ -6,10 +6,11 @@ import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface RichContentRendererProps {
   content: string
+  inlineImages?: any[]
   className?: string
 }
 
-const renderNode = (node: any, index: string | number): React.ReactNode => {
+const renderNode = (node: any, index: string | number, inlineImages?: any[]): React.ReactNode => {
   if (typeof node === 'string') {
     return node
   }
@@ -52,7 +53,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
       return (
         <div key={index}>
           {content?.map((child: any, childIndex: number) => 
-            renderNode(child, `${index}-${childIndex}`)
+            renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
         </div>
       )
@@ -61,7 +62,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
       return (
         <p key={index} className="mb-4 leading-relaxed">
           {content?.map((child: any, childIndex: number) => 
-            renderNode(child, `${index}-${childIndex}`)
+            renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
         </p>
       )
@@ -90,7 +91,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
           className: headingClasses[level as keyof typeof headingClasses] 
         },
         content?.map((child: any, childIndex: number) => 
-          renderNode(child, `${index}-${childIndex}`)
+          renderNode(child, `${index}-${childIndex}`, inlineImages)
         )
       )
 
@@ -98,7 +99,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
       return (
         <ul key={index} className="list-disc list-inside mb-4 space-y-1">
           {content?.map((child: any, childIndex: number) => 
-            renderNode(child, `${index}-${childIndex}`)
+            renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
         </ul>
       )
@@ -107,7 +108,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
       return (
         <ol key={index} className="list-decimal list-inside mb-4 space-y-1">
           {content?.map((child: any, childIndex: number) => 
-            renderNode(child, `${index}-${childIndex}`)
+            renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
         </ol>
       )
@@ -116,7 +117,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
       return (
         <li key={index} className="leading-relaxed">
           {content?.map((child: any, childIndex: number) => 
-            renderNode(child, `${index}-${childIndex}`)
+            renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
         </li>
       )
@@ -125,7 +126,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
       return (
         <blockquote key={index} className="border-l-4 border-blue-500 pl-4 py-2 mb-4 bg-blue-50 italic">
           {content?.map((child: any, childIndex: number) => 
-            renderNode(child, `${index}-${childIndex}`)
+            renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
         </blockquote>
       )
@@ -152,16 +153,48 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
       )
 
     case 'image':
+      const src = attrs?.src || ''
+      const alt = attrs?.alt || ''
+      const title = attrs?.title || ''
+      const imageId = attrs?.['data-image-id'] || ''
+      
+      // If we have image metadata and it's an inline image, ensure URL is correct
+      let finalSrc = src
+      if (imageId && inlineImages) {
+        const imageMetadata = inlineImages.find(img => img.imageId === imageId)
+        if (imageMetadata) {
+          finalSrc = imageMetadata.fileUrl
+        }
+      }
+      
+      // Fallback handling for missing images
+      if (!finalSrc) {
+        return (
+          <div key={index} className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center my-4">
+            <p className="text-gray-500 text-sm">Image not available</p>
+          </div>
+        )
+      }
+      
       return (
         <div key={index} className="my-6 text-center">
           <img
-            src={attrs?.src}
-            alt={attrs?.alt || ''}
+            src={finalSrc}
+            alt={alt}
+            title={title}
             className="max-w-full h-auto rounded-lg shadow-md mx-auto"
             loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+              const parent = target.parentElement
+              if (parent) {
+                parent.innerHTML = '<div class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center my-4"><p class="text-gray-500 text-sm">Image failed to load</p></div>'
+              }
+            }}
           />
-          {attrs?.alt && (
-            <p className="text-sm text-gray-600 mt-2 italic">{attrs.alt}</p>
+          {alt && (
+            <p className="text-sm text-gray-600 mt-2 italic">{alt}</p>
           )}
         </div>
       )
@@ -175,7 +208,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
         return (
           <div key={index}>
             {content.map((child: any, childIndex: number) => 
-              renderNode(child, `${index}-${childIndex}`)
+              renderNode(child, `${index}-${childIndex}`, inlineImages)
             )}
           </div>
         )
@@ -184,7 +217,7 @@ const renderNode = (node: any, index: string | number): React.ReactNode => {
   }
 }
 
-export default function RichContentRenderer({ content, className = "" }: RichContentRendererProps) {
+export default function RichContentRenderer({ content, inlineImages = [], className = "" }: RichContentRendererProps) {
   if (!content) {
     return null
   }
@@ -204,7 +237,7 @@ export default function RichContentRenderer({ content, className = "" }: RichCon
 
   return (
     <div className={`prose prose-lg max-w-none ${className}`}>
-      {renderNode(parsedContent, 'root')}
+      {renderNode(parsedContent, 'root', inlineImages)}
     </div>
   )
 }
