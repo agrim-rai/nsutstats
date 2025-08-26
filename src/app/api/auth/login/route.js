@@ -7,18 +7,18 @@ export async function POST(request) {
   try {
     await connectDB();
     
-    const { email, password } = await request.json();
+    const { username, password } = await request.json();
 
     // Validation
-    if (!email || !password) {
+    if (!username || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Username and password are required' },
         { status: 400 }
       );
     }
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by username
+    const user = await User.findOne({ username });
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
@@ -39,7 +39,6 @@ export async function POST(request) {
     const token = generateToken({
       userId: user._id,
       username: user.username,
-      email: user.email
     });
 
     return NextResponse.json({
@@ -47,7 +46,6 @@ export async function POST(request) {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
       },
       token
     });

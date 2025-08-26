@@ -194,6 +194,12 @@ export default function RichTextEditor({
   placeholder = "Start writing your content...",
   className = ""
 }: RichTextEditorProps) {
+  const [isMounted, setIsMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -212,6 +218,7 @@ export default function RichTextEditor({
       }),
     ],
     content: content,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: 'prose prose-lg max-w-none focus:outline-none p-4 min-h-[400px]',
@@ -261,6 +268,36 @@ export default function RichTextEditor({
       }
     }
   }, [editor, onImageUpload])
+
+  if (!isMounted) {
+    return (
+      <div className={`border border-gray-300 rounded-lg overflow-hidden bg-white ${className}`}>
+        <div className="border-b border-gray-200 p-4 bg-white rounded-t-lg">
+          <div className="flex flex-wrap gap-2">
+            <div className="p-2 text-gray-400">
+              <Undo className="h-4 w-4" />
+            </div>
+            <div className="p-2 text-gray-400">
+              <Redo className="h-4 w-4" />
+            </div>
+            <div className="w-px h-6 bg-gray-300 mx-2" />
+            <div className="p-2 text-gray-400">
+              <Bold className="h-4 w-4" />
+            </div>
+            <div className="p-2 text-gray-400">
+              <Italic className="h-4 w-4" />
+            </div>
+            <div className="p-2 text-gray-400">
+              <Underline className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
+        <div className="p-4 min-h-[400px] bg-gray-50">
+          <div className="text-gray-400">{placeholder}</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`border border-gray-300 rounded-lg overflow-hidden bg-white ${className}`}>
