@@ -80,7 +80,7 @@ export async function POST(request) {
       );
     }
     
-    const { title, content, category, tags, featuredImage, status, attachments } = await request.json();
+    const { title, content, richContent, category, tags, featuredImage, status, attachments, excerpt, readTime } = await request.json();
     
     // Validation
     if (!title || !content || !category) {
@@ -93,11 +93,14 @@ export async function POST(request) {
     const post = new Post({
       title,
       content,
+      richContent: richContent || null,
       category,
       tags: tags || [],
       featuredImage: featuredImage || '',
       status: status || 'published',
       attachments: attachments || [],
+      excerpt: excerpt || content.substring(0, 200),
+      readTime: readTime || Math.ceil(content.length / 200),
       author: user.userId
     });
     

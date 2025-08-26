@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Edit, Trash2, Eye, Plus, Calendar, Clock } from 'lucide-react'
 import { Post } from '@/types'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function Dashboard() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -29,11 +30,16 @@ export default function Dashboard() {
   const fetchUserPosts = async () => {
     try {
       const token = localStorage.getItem('token')
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
+      
       const response = await fetch('/api/user/posts', {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        signal: controller.signal
       })
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         throw new Error('Failed to fetch posts')
@@ -42,7 +48,11 @@ export default function Dashboard() {
       const data = await response.json()
       setPosts(data.posts || [])
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch posts')
+      if (error instanceof Error && error.name === 'AbortError') {
+        setError('Request timed out. Please try again.')
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to fetch posts')
+      }
     } finally {
       setLoading(false)
     }
@@ -80,14 +90,7 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner text="Loading dashboard..." />
   }
 
   if (!user) {

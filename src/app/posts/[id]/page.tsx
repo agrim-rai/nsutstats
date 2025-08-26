@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink } from 'lucide-react'
 import { Post, Comment } from '@/types'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import RichContentRenderer from '@/components/RichContentRenderer'
 
 export default function PostPage() {
   const params = useParams()
@@ -19,7 +21,14 @@ export default function PostPage() {
 
   const fetchPost = useCallback(async () => {
     try {
-      const response = await fetch(`/api/posts/${params.id}`)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
+      
+      const response = await fetch(`/api/posts/${params.id}`, {
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+      
       const data = await response.json()
       
       if (!response.ok) {
@@ -28,7 +37,11 @@ export default function PostPage() {
       
       setPost(data.post)
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to load post')
+      if (error instanceof Error && error.name === 'AbortError') {
+        setError('Request timed out. Please try again.')
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to load post')
+      }
     } finally {
       setLoading(false)
     }
@@ -36,7 +49,18 @@ export default function PostPage() {
 
   const fetchComments = useCallback(async () => {
     try {
-      const response = await fetch(`/api/posts/${params.id}/comments`)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      
+      const response = await fetch(`/api/posts/${params.id}/comments`, {
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch comments')
+      }
+      
       const data = await response.json()
       setComments(data.comments || [])
     } catch (error) {
@@ -136,14 +160,7 @@ export default function PostPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner text="Loading article..." />
   }
 
   if (error || !post) {
@@ -237,8 +254,14 @@ export default function PostPage() {
       </div>
 
       {/* Post Content */}
-      <div className="prose prose-lg max-w-none mb-12">
-        <div className="whitespace-pre-wrap leading-relaxed text-gray-800">{post.content}</div>
+      <div className="mb-12">
+        {post.richContent ? (
+          <RichContentRenderer content={post.richContent} />
+        ) : (
+          <div className="prose prose-lg max-w-none">
+            <div className="whitespace-pre-wrap leading-relaxed text-gray-800">{post.content}</div>
+          </div>
+        )}
       </div>
 
       {/* File Attachments */}

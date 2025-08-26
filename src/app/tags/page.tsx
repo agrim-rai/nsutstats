@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Tag, ArrowRight } from 'lucide-react'
 import { Tag as TagType } from '@/types'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function Tags() {
   const [tags, setTags] = useState<TagType[]>([])
@@ -15,7 +16,18 @@ export default function Tags() {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch('/api/tags')
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      
+      const response = await fetch('/api/tags', {
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tags')
+      }
+      
       const data = await response.json()
       setTags(data.tags || [])
     } catch (error) {
@@ -26,14 +38,7 @@ export default function Tags() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner text="Loading tags..." />
   }
 
   return (

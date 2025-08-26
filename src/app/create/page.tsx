@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, X, Upload, File, Image, Code, Trash2 } from 'lucide-react'
+import RichTextEditor from '@/components/RichTextEditor'
+import { uploadImageToS3 } from '@/lib/imageUpload'
 
 interface Attachment {
   fileName: string
@@ -16,6 +18,7 @@ export default function CreatePost() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
+    richContent: '',
     category: '',
     tags: [] as string[],
     featuredImage: '',
@@ -54,13 +57,33 @@ export default function CreatePost() {
 
     try {
       const token = localStorage.getItem('token')
+      
+      // Extract plain text content from rich content for excerpt
+      let excerpt = ''
+      if (formData.richContent) {
+        try {
+          const richContent = JSON.parse(formData.richContent)
+          excerpt = extractTextFromRichContent(richContent)
+        } catch (error) {
+          excerpt = formData.content
+        }
+      } else {
+        excerpt = formData.content
+      }
+
+      const postData = {
+        ...formData,
+        excerpt: excerpt.substring(0, 200) + (excerpt.length > 200 ? '...' : ''),
+        readTime: Math.ceil(excerpt.length / 200) // Rough estimate: 200 chars per minute
+      }
+
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(postData),
       })
 
       const data = await response.json()
@@ -170,6 +193,51 @@ export default function CreatePost() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  // Helper function to extract plain text from rich content
+  const extractTextFromRichContent = (richContent: any): string => {
+    if (!richContent || typeof richContent !== 'object') return ''
+    
+    let text = ''
+    
+    const extractFromNode = (node: any) => {
+      if (typeof node === 'string') {
+        text += node
+        return
+      }
+      
+      if (node.type === 'text' && node.text) {
+        text += node.text
+      }
+      
+      if (node.content && Array.isArray(node.content)) {
+        node.content.forEach(extractFromNode)
+      }
+    }
+    
+    extractFromNode(richContent)
+    return text
+  }
+
+  // Handle rich content changes
+  const handleRichContentChange = (richContent: string) => {
+    setFormData(prev => ({
+      ...prev,
+      richContent,
+      content: extractTextFromRichContent(JSON.parse(richContent))
+    }))
+  }
+
+  // Handle image upload for rich editor
+  const handleImageUpload = async (file: File): Promise<string> => {
+    try {
+      const url = await uploadImageToS3(file)
+      return url
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to upload image')
+      throw error
+    }
   }
 
   if (!user) {
@@ -290,15 +358,12 @@ export default function CreatePost() {
           <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
             Content *
           </label>
-          <textarea
-            id="content"
-            name="content"
-            required
-            rows={15}
-            value={formData.content}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-            placeholder="Write your post content here..."
+          <RichTextEditor
+            content={formData.richContent}
+            onChange={handleRichContentChange}
+            onImageUpload={handleImageUpload}
+            placeholder="Write your post content here... You can format text, add images, and insert code blocks."
+            className="min-h-[400px]"
           />
         </div>
 

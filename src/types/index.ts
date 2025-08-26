@@ -22,6 +22,7 @@ export interface Post {
   _id: string;
   title: string;
   content: string;
+  richContent?: any; // Tiptap JSON content
   excerpt: string;
   author: User;
   category: string;

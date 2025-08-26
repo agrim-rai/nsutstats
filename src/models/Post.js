@@ -12,6 +12,10 @@ const postSchema = new mongoose.Schema({
     required: true,
     minlength: 10
   },
+  richContent: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+  },
   excerpt: {
     type: String,
     maxlength: 300,

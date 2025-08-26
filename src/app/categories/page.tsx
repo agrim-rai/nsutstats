@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Category } from '@/types'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -11,7 +12,18 @@ export default function Categories() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch('/api/categories')
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      
+      const response = await fetch('/api/categories', {
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories')
+      }
+      
       const data = await response.json()
       setCategories(data.categories || [])
     } catch (error) {
@@ -26,14 +38,7 @@ export default function Categories() {
   }, [fetchCategories])
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner text="Loading categories..." />
   }
 
   return (

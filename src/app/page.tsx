@@ -4,59 +4,97 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Calendar, Clock, User, Search, BarChart3, TrendingUp, Database } from 'lucide-react'
 import { Post, Category, Tag as TagType } from '@/types'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import { useLoading } from '@/lib/useLoading'
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedTag, setSelectedTag] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<TagType[]>([])
+  
+  const { loading, error, withLoading } = useLoading({ minLoadingTime: 300 })
 
   const fetchPosts = useCallback(async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (searchTerm) params.append('search', searchTerm)
-      if (selectedCategory) params.append('category', selectedCategory)
-      if (selectedTag) params.append('tag', selectedTag)
-      
-      const response = await fetch(`/api/posts?${params}`)
-      const data = await response.json()
-      setPosts(data.posts || [])
-    } catch (error) {
-      console.error('Error fetching posts:', error)
-    } finally {
-      setLoading(false)
+    const params = new URLSearchParams()
+    if (searchTerm) params.append('search', searchTerm)
+    if (selectedCategory) params.append('category', selectedCategory)
+    if (selectedTag) params.append('tag', selectedTag)
+    
+    // Add timeout to prevent long loading times
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
+    const response = await fetch(`/api/posts?${params}`, {
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch posts')
     }
+    
+    const data = await response.json()
+    setPosts(data.posts || [])
   }, [searchTerm, selectedCategory, selectedTag])
 
   const fetchCategories = useCallback(async () => {
-    try {
-      const response = await fetch('/api/categories')
-      const data = await response.json()
-      setCategories(data.categories || [])
-    } catch (error) {
-      console.error('Error fetching categories:', error)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+    
+    const response = await fetch('/api/categories', {
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch categories')
     }
+    
+    const data = await response.json()
+    setCategories(data.categories || [])
   }, [])
 
   const fetchTags = useCallback(async () => {
-    try {
-      const response = await fetch('/api/tags')
-      const data = await response.json()
-      setTags(data.tags || [])
-    } catch (error) {
-      console.error('Error fetching tags:', error)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+    
+    const response = await fetch('/api/tags', {
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch tags')
     }
+    
+    const data = await response.json()
+    setTags(data.tags || [])
   }, [])
 
   useEffect(() => {
-    fetchPosts()
-    fetchCategories()
-    fetchTags()
-  }, [fetchPosts, fetchCategories, fetchTags])
+    // Fetch data in parallel for better performance using the loading hook
+    const fetchData = async () => {
+      await withLoading(async () => {
+        // Use Promise.allSettled to handle partial failures gracefully
+        const results = await Promise.allSettled([
+          fetchPosts(),
+          fetchCategories(),
+          fetchTags()
+        ])
+        
+        // Check if any requests failed
+        const failedRequests = results.filter(result => result.status === 'rejected')
+        if (failedRequests.length > 0) {
+          console.warn('Some requests failed:', failedRequests)
+        }
+      })
+    }
+    
+    fetchData()
+  }, [fetchPosts, fetchCategories, fetchTags, withLoading])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -67,12 +105,21 @@ export default function Home() {
   }
 
   if (loading) {
+    return <LoadingSpinner text="Loading articles..." />
+  }
+
+  if (error) {
     return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="text-center py-12">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
+          {error}
         </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          Try Again
+        </button>
       </div>
     )
   }
@@ -89,24 +136,6 @@ export default function Home() {
           We publish cutting-edge statistics and analytical content to empower your understanding of data science.
         </p>
         
-        {/* Feature highlights */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border text-center">
-            <BarChart3 className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Data Analysis</h3>
-            <p className="text-gray-600">Comprehensive statistical analysis and data insights</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border text-center">
-            <TrendingUp className="h-12 w-12 text-green-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">ML Insights</h3>
-            <p className="text-gray-600">Machine learning trends and predictive analytics</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border text-center">
-            <Database className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Statistics</h3>
-            <p className="text-gray-600">Advanced statistical methods and research findings</p>
-          </div>
-        </div>
       </div>
 
       {/* Search and Filters */}
@@ -119,14 +148,14 @@ export default function Home() {
               placeholder="Search articles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-black placeholder-gray-500"
             />
           </div>
           
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-black"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -139,7 +168,7 @@ export default function Home() {
           <select
             value={selectedTag}
             onChange={(e) => setSelectedTag(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-black"
           >
             <option value="">All Tags</option>
             {tags.slice(0, 10).map((tag) => (
