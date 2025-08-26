@@ -17,11 +17,11 @@ export async function POST(request) {
       );
     }
 
-    // Find user by username
-    const user = await User.findOne({ username });
+    // Find user by username (excluding admins)
+    const user = await User.findOne({ username, role: { $ne: 'admin' } });
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Invalid credentials or admin users should use admin login' },
         { status: 401 }
       );
     }
@@ -39,6 +39,7 @@ export async function POST(request) {
     const token = generateToken({
       userId: user._id,
       username: user.username,
+      role: user.role
     });
 
     return NextResponse.json({
@@ -46,6 +47,7 @@ export async function POST(request) {
       user: {
         id: user._id,
         username: user.username,
+        role: user.role
       },
       token
     });

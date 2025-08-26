@@ -34,7 +34,9 @@ const userSchema = new mongoose.Schema({
 
 // Method to compare password (plain text comparison)
 userSchema.methods.comparePassword = function(candidatePassword) {
-  return this.password === candidatePassword;
+  const isMatch = this.password === candidatePassword;
+  console.log('Password comparison:', { stored: this.password, candidate: candidatePassword, match: isMatch });
+  return isMatch;
 };
 
 // Method to get user without password

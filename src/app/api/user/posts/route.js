@@ -10,11 +10,16 @@ export async function GET(request) {
     
     const user = await authenticateUser(request);
     if (!user) {
+      console.log('Authentication failed in /api/user/posts - no user found');
+      const authHeader = request.headers.get('authorization');
+      console.log('Auth header:', authHeader ? 'Present' : 'Missing');
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
+    
+    console.log('Authenticated user:', { userId: user.userId, role: user.role });
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page')) || 1;

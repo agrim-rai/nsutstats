@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Post from '@/models/Post';
+import User from '@/models/User';
 import { authenticateUser } from '@/lib/auth';
 import { deleteFileFromS3 } from '@/lib/s3';
 
@@ -9,7 +10,7 @@ export async function GET(request, { params }) {
   try {
     await connectDB();
     
-    const { id } = params;
+    const { id } = await params;
     
     const post = await Post.findById(id)
       .populate('author', 'username avatar bio')
@@ -58,7 +59,7 @@ export async function PUT(request, { params }) {
       );
     }
     
-    const { id } = params;
+    const { id } = await params;
     const { title, content, category, tags, featuredImage, status, attachments } = await request.json();
     
     const post = await Post.findById(id);
@@ -118,7 +119,7 @@ export async function DELETE(request, { params }) {
       );
     }
     
-    const { id } = params;
+    const { id } = await params;
     
     const post = await Post.findById(id);
     if (!post) {

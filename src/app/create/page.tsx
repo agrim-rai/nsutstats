@@ -42,11 +42,7 @@ export default function CreatePost() {
     }
     
     const userObj = JSON.parse(userData)
-    if (userObj.role !== 'admin') {
-      router.push('/')
-      return
-    }
-    
+    // Allow both admins and regular users to create posts
     setUser(userObj)
   }, [router])
 
@@ -71,10 +67,31 @@ export default function CreatePost() {
         excerpt = formData.content
       }
 
+      // Client-side validation for content length
+      if (excerpt.trim().length < 10) {
+        setError('Content must be at least 10 characters long. Currently: ' + excerpt.trim().length + ' characters.')
+        setLoading(false)
+        return
+      }
+
+      // Validation for required fields
+      if (!formData.title.trim()) {
+        setError('Title is required.')
+        setLoading(false)
+        return
+      }
+
+      if (!formData.category.trim()) {
+        setError('Category is required.')
+        setLoading(false)
+        return
+      }
+
       const postData = {
         ...formData,
+        content: excerpt, // Use extracted text as content
         excerpt: excerpt.substring(0, 200) + (excerpt.length > 200 ? '...' : ''),
-        readTime: Math.ceil(excerpt.length / 200) // Rough estimate: 200 chars per minute
+        readTime: Math.ceil(excerpt.split(/\s+/).length / 200) // Word count divided by 200 words per minute
       }
 
       const response = await fetch('/api/posts', {
@@ -214,18 +231,32 @@ export default function CreatePost() {
       if (node.content && Array.isArray(node.content)) {
         node.content.forEach(extractFromNode)
       }
+      
+      // Handle paragraph breaks and other block elements
+      if (node.type === 'paragraph' || node.type === 'heading') {
+        text += ' '
+      }
     }
     
     extractFromNode(richContent)
-    return text
+    return text.trim()
   }
 
   // Handle rich content changes
   const handleRichContentChange = (richContent: string) => {
+    let extractedText = ''
+    try {
+      const parsed = JSON.parse(richContent)
+      extractedText = extractTextFromRichContent(parsed)
+    } catch (error) {
+      console.error('Error parsing rich content:', error)
+      extractedText = ''
+    }
+    
     setFormData(prev => ({
       ...prev,
       richContent,
-      content: extractTextFromRichContent(JSON.parse(richContent))
+      content: extractedText
     }))
   }
 
@@ -365,6 +396,17 @@ export default function CreatePost() {
             placeholder="Write your post content here... You can format text, add images, and insert code blocks."
             className="min-h-[400px]"
           />
+          <div className="mt-2 text-sm text-gray-500">
+            Content length: {formData.content.length} characters 
+            {formData.content.length < 10 && (
+              <span className="text-red-500 ml-2">
+                (Minimum 10 characters required)
+              </span>
+            )}
+            {formData.content.length >= 10 && (
+              <span className="text-green-500 ml-2">✓</span>
+            )}
+          </div>
         </div>
 
         <div>

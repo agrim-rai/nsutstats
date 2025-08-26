@@ -17,18 +17,19 @@ export async function POST(request) {
 
     await connectDB();
     
-    // Find admin user
+    // Find admin user - only allow admin role
     const adminUser = await User.findOne({ username, role: 'admin' });
     if (!adminUser) {
       return NextResponse.json(
-        { error: 'Invalid admin credentials' },
+        { error: 'Invalid admin credentials or regular users should use regular login' },
         { status: 401 }
       );
     }
     
     // Verify password
-    const isValidPassword = adminUser.comparePassword(password);
+    const isValidPassword = await adminUser.comparePassword(password);
     if (!isValidPassword) {
+      console.log('Password comparison failed for admin:', username);
       return NextResponse.json(
         { error: 'Invalid admin credentials' },
         { status: 401 }

@@ -42,6 +42,9 @@ export default function Navbar() {
             <Link href="/categories" className="text-gray-700 hover:text-gray-900 transition-colors">
               Categories
             </Link>
+            <Link href="/tags" className="text-gray-700 hover:text-gray-900 transition-colors">
+              Tags
+            </Link>
             {user ? (
               <>
                 {user.role === 'admin' && (
@@ -113,7 +116,6 @@ export default function Navbar() {
               <Link href="/tags" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
                 Tags
               </Link>
-              
               {user ? (
                 <>
                   {user.role === 'admin' && (
@@ -138,9 +140,6 @@ export default function Navbar() {
                 <>
                   <Link href="/login" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
                     Login
-                  </Link>
-                  <Link href="/admin" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
-                    Admin
                   </Link>
                   <Link href="/register" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
                     Sign Up

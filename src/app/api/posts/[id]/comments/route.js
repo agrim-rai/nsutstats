@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Comment from '@/models/Comment';
 import Post from '@/models/Post';
+import User from '@/models/User';
 import { authenticateUser } from '@/lib/auth';
 
 // GET comments for a post
@@ -9,7 +10,7 @@ export async function GET(request, { params }) {
   try {
     await connectDB();
     
-    const { id: postId } = params;
+    const { id: postId } = await params;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 20;
@@ -66,7 +67,7 @@ export async function POST(request, { params }) {
       );
     }
     
-    const { id: postId } = params;
+    const { id: postId } = await params;
     const { content, parentComment } = await request.json();
     
     // Validation

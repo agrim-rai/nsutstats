@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
 
 if (!JWT_SECRET) {
-  throw new Error('not found in .env');
+  throw new Error('JWT_SECRET or NEXTAUTH_SECRET not found in environment variables');
 }
 
 export function generateToken(payload) {
@@ -12,14 +12,18 @@ export function generateToken(payload) {
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('Token verified successfully:', { userId: decoded.userId, role: decoded.role });
+    return decoded;
   } catch (error) {
+    console.log('Token verification failed:', error.message);
     return null;
   }
 }
 
 export function getTokenFromHeader(req) {
-  const authHeader = req.headers.authorization;
+  const authHeader = req.headers.get ? req.headers.get('authorization') : req.headers.authorization;
+  console.log('Auth header found:', authHeader ? 'Present' : 'Missing');
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return authHeader.substring(7);
   }

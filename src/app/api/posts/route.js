@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Post from '@/models/Post';
+import User from '@/models/User';
 import { authenticateUser } from '@/lib/auth';
 
 // GET all posts
@@ -72,13 +73,8 @@ export async function POST(request) {
       );
     }
     
-    // Check if user is admin
-    if (user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required to create posts' },
-        { status: 403 }
-      );
-    }
+    // Users can create posts (not restricted to admin only)
+    console.log('Creating post for user:', { userId: user.userId, role: user.role });
     
     const { title, content, richContent, category, tags, featuredImage, status, attachments, excerpt, readTime } = await request.json();
     
@@ -116,8 +112,18 @@ export async function POST(request) {
     
   } catch (error) {
     console.error('Create post error:', error);
+    
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return NextResponse.json(
+        { error: `Validation failed: ${errors.join(', ')}` },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'server error ' },
+      { error: 'Failed to create post. Please try again.' },
       { status: 500 }
     );
   }
