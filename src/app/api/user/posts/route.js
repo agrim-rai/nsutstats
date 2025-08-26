@@ -24,7 +24,13 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
     
     // Build query
-    let query = { author: user.userId };
+    let query = {};
+    
+    // If user is admin, show all posts. Otherwise, show only user's posts
+    if (user.role !== 'admin') {
+      query.author = user.userId;
+    }
+    
     if (status) {
       query.status = status;
     }

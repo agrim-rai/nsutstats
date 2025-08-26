@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { authenticateAdmin, generateAdminToken } from '@/lib/auth';
+import connectDB from '@/lib/db';
+import User from '@/models/User';
+import { generateToken } from '@/lib/auth';
 
 export async function POST(request) {
   try {
@@ -13,24 +15,39 @@ export async function POST(request) {
       );
     }
 
-    // Authenticate admin
-    const isAdmin = authenticateAdmin(username, password);
-    if (!isAdmin) {
+    await connectDB();
+    
+    // Find admin user
+    const adminUser = await User.findOne({ username, role: 'admin' });
+    if (!adminUser) {
+      return NextResponse.json(
+        { error: 'Invalid admin credentials' },
+        { status: 401 }
+      );
+    }
+    
+    // Verify password
+    const isValidPassword = adminUser.comparePassword(password);
+    if (!isValidPassword) {
       return NextResponse.json(
         { error: 'Invalid admin credentials' },
         { status: 401 }
       );
     }
 
-    // Generate admin token
-    const token = generateAdminToken();
+    // Generate token with actual user ID
+    const token = generateToken({
+      userId: adminUser._id.toString(),
+      username: adminUser.username,
+      role: adminUser.role
+    });
 
     return NextResponse.json({
       message: 'Admin login successful',
       user: {
-        id: 'admin',
-        username: process.env.ADMIN_USERNAME,
-        role: 'admin'
+        id: adminUser._id.toString(),
+        username: adminUser.username,
+        role: adminUser.role
       },
       token
     });

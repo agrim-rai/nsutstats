@@ -40,21 +40,4 @@ export async function authenticateUser(req) {
   return decoded;
 }
 
-export function authenticateAdmin(username, password) {
-  const adminUsername = process.env.ADMIN_USERNAME;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  
-  if (!adminUsername || !adminPassword) {
-    throw new Error('Admin credentials not configured');
-  }
-  
-  return username === adminUsername && password === adminPassword;
-}
 
-export function generateAdminToken() {
-  return generateToken({
-    userId: 'admin',
-    username: process.env.ADMIN_USERNAME,
-    role: 'admin'
-  });
-}

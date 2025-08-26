@@ -104,7 +104,9 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">NSUT Stats Dashboard</h1>
-            <p className="text-gray-600 mt-2">Manage your blog posts</p>
+            <p className="text-gray-600 mt-2">
+              {user.role === 'admin' ? 'Manage all blog posts' : 'Manage your blog posts'}
+            </p>
           </div>
           <Link
             href="/create"
@@ -128,20 +130,26 @@ export default function Dashboard() {
           <div className="text-gray-400 mb-4">
             <Plus className="h-16 w-16 mx-auto" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
-          <p className="text-gray-600 mb-6">Start writing your first blog post!</p>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            {user.role === 'admin' ? 'No posts found' : 'No posts yet'}
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {user.role === 'admin' ? 'There are no blog posts in the system yet.' : 'Start writing your first blog post!'}
+          </p>
           <Link
             href="/create"
             className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
-            <span>Create Your First Post</span>
+            <span>{user.role === 'admin' ? 'Create New Post' : 'Create Your First Post'}</span>
           </Link>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Your Posts ({posts.length})</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {user.role === 'admin' ? 'All Posts' : 'Your Posts'} ({posts.length})
+            </h2>
           </div>
           
           <div className="divide-y divide-gray-200">
