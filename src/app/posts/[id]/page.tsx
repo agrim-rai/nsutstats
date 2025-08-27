@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink, Archive, BookOpen } from 'lucide-react'
+import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink, Archive, BookOpen, ZoomIn, X } from 'lucide-react'
 import { Post, Comment } from '@/types'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import RichContentRenderer from '@/components/RichContentRenderer'
@@ -18,6 +18,7 @@ export default function PostPage() {
   const [submittingComment, setSubmittingComment] = useState(false)
   const [user, setUser] = useState<{ username: string; role?: string } | null>(null)
   const [error, setError] = useState('')
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   const fetchPost = useCallback(async () => {
     try {
@@ -161,6 +162,19 @@ export default function PostPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
+  const isImageFile = (fileType: string, fileName: string = '') => {
+    return fileType.startsWith('image/') || 
+           /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(fileName)
+  }
+
+  const openImageModal = (imageUrl: string) => {
+    setSelectedImage(imageUrl)
+  }
+
+  const closeImageModal = () => {
+    setSelectedImage(null)
+  }
+
   if (loading) {
     return <LoadingSpinner text="Loading article..." />
   }
@@ -222,11 +236,11 @@ export default function PostPage() {
           )}
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold text-white-900 mb-4">{post.title}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
         <div className="flex items-center space-x-4 mb-6">
           <div className="flex items-center space-x-2">
             <User className="h-5 w-5 text-gray-500" />
-            <span className="text-gray-700 font-medium">{post.author.username}</span>
+            <span className="text-gray-900 dark:text-gray-100 font-medium">{post.author.username}</span>
           </div>
         </div>
 
@@ -263,7 +277,7 @@ export default function PostPage() {
           />
         ) : (
           <div className="prose prose-lg max-w-none">
-            <div className="whitespace-pre-wrap leading-relaxed text-gray-800">{post.content}</div>
+            <div className="whitespace-pre-wrap leading-relaxed text-gray-900 dark:text-gray-100">{post.content}</div>
           </div>
         )}
       </div>
@@ -275,38 +289,108 @@ export default function PostPage() {
             <File className="h-5 w-5 mr-2" />
             Attachments ({post.attachments.length})
           </h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {post.attachments.map((attachment) => (
-              <div key={attachment.fileName} className="flex items-center justify-between p-3 sm:p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center space-x-3">
-                  {getFileIcon(attachment.fileType, attachment.originalName)}
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{attachment.originalName}</p>
-                    <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <a
-                    href={attachment.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="View file"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                  <a
-                    href={attachment.fileUrl}
-                    download={attachment.originalName}
-                    className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
-                    title="Download file"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
-                </div>
+          
+          {/* Separate image attachments for preview */}
+          {post.attachments.filter(att => isImageFile(att.fileType, att.originalName)).length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-md font-medium text-gray-800 mb-3">Images</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {post.attachments
+                  .filter(att => isImageFile(att.fileType, att.originalName))
+                  .map((attachment) => (
+                    <div key={attachment.fileName} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="relative">
+                        <img
+                          src={attachment.fileUrl}
+                          alt={attachment.originalName}
+                          className="w-full h-48 object-cover cursor-pointer"
+                          onClick={() => openImageModal(attachment.fileUrl)}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.style.display = 'none'
+                            const parent = target.parentElement
+                            if (parent) {
+                              parent.innerHTML = '<div class="flex items-center justify-center h-48 bg-gray-100"><p class="text-gray-500 text-sm">Image failed to load</p></div>'
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => openImageModal(attachment.fileUrl)}
+                          className="absolute top-2 right-2 p-2 bg-black bg-opacity-50 text-white rounded-lg hover:bg-opacity-70 transition-all"
+                          title="View full size"
+                        >
+                          <ZoomIn className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="p-3">
+                        <p className="text-sm font-medium text-gray-900 truncate">{attachment.originalName}</p>
+                        <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <a
+                            href={attachment.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                            title="Open in new tab"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                          <a
+                            href={attachment.fileUrl}
+                            download={attachment.originalName}
+                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+          
+          {/* Other file attachments */}
+          {post.attachments.filter(att => !isImageFile(att.fileType, att.originalName)).length > 0 && (
+            <div>
+              <h4 className="text-md font-medium text-gray-800 mb-3">Files</h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {post.attachments
+                  .filter(att => !isImageFile(att.fileType, att.originalName))
+                  .map((attachment) => (
+                    <div key={attachment.fileName} className="flex items-center justify-between p-3 sm:p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-3">
+                        {getFileIcon(attachment.fileType, attachment.originalName)}
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{attachment.originalName}</p>
+                          <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <a
+                          href={attachment.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="View file"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                        <a
+                          href={attachment.fileUrl}
+                          download={attachment.originalName}
+                          className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Download file"
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -314,7 +398,7 @@ export default function PostPage() {
       <div className="border-t pt-8">
         <div className="flex items-center space-x-2 mb-6">
           <MessageCircle className="h-5 w-5" />
-          <h2 className="text-xl md:text-2xl font-bold text-white-900">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
             Comments ({comments.length})
           </h2>
         </div>
@@ -376,6 +460,51 @@ export default function PostPage() {
           )}
         </div>
       </div>
+
+      {/* Full-size image modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closeImageModal}
+        >
+          <div className="relative max-w-full max-h-full">
+            <button
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition-all z-10"
+              title="Close"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img
+              src={selectedImage}
+              alt="Full size image"
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="absolute bottom-4 right-4 flex space-x-2">
+              <a
+                href={selectedImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white bg-black bg-opacity-50 rounded-lg p-2 hover:bg-opacity-70 transition-all"
+                title="Open in new tab"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-5 w-5" />
+              </a>
+              <a
+                href={selectedImage}
+                download
+                className="text-white bg-black bg-opacity-50 rounded-lg p-2 hover:bg-opacity-70 transition-all"
+                title="Download image"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Download className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -86,8 +86,8 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Upload to S3
-    const fileUrl = await uploadFileToS3(buffer, fileName);
+    // Upload to S3 with proper content type
+    const fileUrl = await uploadFileToS3(buffer, fileName, file.type);
 
     return NextResponse.json({
       message: 'File uploaded successfully',

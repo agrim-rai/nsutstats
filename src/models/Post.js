@@ -26,8 +26,7 @@ const attachmentSchema = new mongoose.Schema({
 const inlineImageSchema = new mongoose.Schema({
   imageId: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   fileName: {
     type: String,
@@ -136,5 +135,8 @@ postSchema.pre('save', function(next) {
 
 // Index for search functionality
 postSchema.index({ title: 'text', content: 'text', tags: 'text' });
+
+// Ensure imageId uniqueness within each post (not globally)
+postSchema.index({ 'inlineImages.imageId': 1 }, { sparse: true });
 
 export default mongoose.models.Post || mongoose.model('Post', postSchema);

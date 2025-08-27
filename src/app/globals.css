@@ -157,17 +157,33 @@ body {
   line-height: 1.25;
 }
 
+.dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4, .dark .prose h5, .dark .prose h6 {
+  color: #f9fafb;
+}
+
 .prose p {
   color: #374151;
   line-height: 1.75;
+}
+
+.dark .prose p {
+  color: #d1d5db;
 }
 
 .prose ul, .prose ol {
   color: #374151;
 }
 
+.dark .prose ul, .dark .prose ol {
+  color: #d1d5db;
+}
+
 .prose li {
   margin: 0.5rem 0;
+}
+
+.dark .prose li {
+  color: #d1d5db;
 }
 
 .prose blockquote {
@@ -176,6 +192,11 @@ body {
   margin: 1rem 0;
   font-style: italic;
   background-color: #f8fafc;
+}
+
+.dark .prose blockquote {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #d1d5db;
 }
 
 .prose code {

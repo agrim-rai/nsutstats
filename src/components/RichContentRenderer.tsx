@@ -60,7 +60,7 @@ const renderNode = (node: any, index: string | number, inlineImages?: any[]): Re
 
     case 'paragraph':
       return (
-        <p key={index} className="mb-4 leading-relaxed">
+        <p key={index} className="mb-4 leading-relaxed text-gray-900 dark:text-gray-100">
           {content?.map((child: any, childIndex: number) => 
             renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
@@ -70,12 +70,12 @@ const renderNode = (node: any, index: string | number, inlineImages?: any[]): Re
     case 'heading':
       const level = attrs?.level || 1
       const headingClasses = {
-        1: 'text-3xl font-bold mb-6 mt-8',
-        2: 'text-2xl font-bold mb-4 mt-6',
-        3: 'text-xl font-bold mb-3 mt-5',
-        4: 'text-lg font-bold mb-2 mt-4',
-        5: 'text-base font-bold mb-2 mt-3',
-        6: 'text-sm font-bold mb-1 mt-2'
+        1: 'text-3xl font-bold mb-6 mt-8 text-gray-900 dark:text-white',
+        2: 'text-2xl font-bold mb-4 mt-6 text-gray-900 dark:text-white',
+        3: 'text-xl font-bold mb-3 mt-5 text-gray-900 dark:text-white',
+        4: 'text-lg font-bold mb-2 mt-4 text-gray-900 dark:text-white',
+        5: 'text-base font-bold mb-2 mt-3 text-gray-900 dark:text-white',
+        6: 'text-sm font-bold mb-1 mt-2 text-gray-900 dark:text-white'
       }
       
       const HeadingComponent = level === 1 ? 'h1' : 
@@ -97,7 +97,7 @@ const renderNode = (node: any, index: string | number, inlineImages?: any[]): Re
 
     case 'bulletList':
       return (
-        <ul key={index} className="list-disc list-inside mb-4 space-y-1">
+        <ul key={index} className="list-disc list-inside mb-4 space-y-1 text-gray-900 dark:text-gray-100">
           {content?.map((child: any, childIndex: number) => 
             renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
@@ -106,7 +106,7 @@ const renderNode = (node: any, index: string | number, inlineImages?: any[]): Re
 
     case 'orderedList':
       return (
-        <ol key={index} className="list-decimal list-inside mb-4 space-y-1">
+        <ol key={index} className="list-decimal list-inside mb-4 space-y-1 text-gray-900 dark:text-gray-100">
           {content?.map((child: any, childIndex: number) => 
             renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
@@ -115,7 +115,7 @@ const renderNode = (node: any, index: string | number, inlineImages?: any[]): Re
 
     case 'listItem':
       return (
-        <li key={index} className="leading-relaxed">
+        <li key={index} className="leading-relaxed text-gray-900 dark:text-gray-100">
           {content?.map((child: any, childIndex: number) => 
             renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
@@ -124,7 +124,7 @@ const renderNode = (node: any, index: string | number, inlineImages?: any[]): Re
 
     case 'blockquote':
       return (
-        <blockquote key={index} className="border-l-4 border-blue-500 pl-4 py-2 mb-4 bg-blue-50 italic">
+        <blockquote key={index} className="border-l-4 border-blue-500 pl-4 py-2 mb-4 bg-blue-50 dark:bg-blue-900/20 italic text-gray-900 dark:text-gray-100">
           {content?.map((child: any, childIndex: number) => 
             renderNode(child, `${index}-${childIndex}`, inlineImages)
           )}
@@ -178,21 +178,38 @@ const renderNode = (node: any, index: string | number, inlineImages?: any[]): Re
       
       return (
         <div key={index} className="my-6 text-center">
-          <img
-            src={finalSrc}
-            alt={alt}
-            title={title}
-            className="max-w-full h-auto rounded-lg shadow-md mx-auto"
-            loading="lazy"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement
-              target.style.display = 'none'
-              const parent = target.parentElement
-              if (parent) {
-                parent.innerHTML = '<div class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center my-4"><p class="text-gray-500 text-sm">Image failed to load</p></div>'
-              }
-            }}
-          />
+          <div className="relative inline-block">
+            <img
+              src={finalSrc}
+              alt={alt}
+              title={title}
+              className="max-w-full h-auto rounded-lg shadow-md mx-auto cursor-pointer hover:shadow-lg transition-shadow"
+              loading="lazy"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.style.display = 'none'
+                const parent = target.parentElement
+                if (parent) {
+                  parent.innerHTML = '<div class="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center my-4"><p class="text-gray-500 text-sm">Image failed to load</p></div>'
+                }
+              }}
+              onClick={() => window.open(finalSrc, '_blank')}
+            />
+            <div className="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+              <a
+                href={finalSrc}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-black bg-opacity-50 text-white p-1 rounded hover:bg-opacity-70 transition-all"
+                title="Open full size"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
           {alt && (
             <p className="text-sm text-gray-600 mt-2 italic">{alt}</p>
           )}

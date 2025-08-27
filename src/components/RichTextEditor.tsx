@@ -231,7 +231,7 @@ export default function RichTextEditor({
         // Turn off loading state after image is inserted
         setIsUploading(false)
       }, 100)
-      
+      // this is the place after which the cimages area being and normatily defined
       return true
     } catch (error) {
       console.error('Failed to upload pasted image:', error)

@@ -86,6 +86,11 @@ export async function POST(request) {
       );
     }
     
+    // Filter out any invalid inline images
+    const validInlineImages = (inlineImages || []).filter(img => 
+      img && img.imageId && img.fileName && img.fileUrl
+    );
+
     const post = new Post({
       title,
       content,
@@ -95,7 +100,7 @@ export async function POST(request) {
       featuredImage: featuredImage || '',
       status: status || 'published',
       attachments: attachments || [],
-      inlineImages: inlineImages || [],
+      inlineImages: validInlineImages,
       excerpt: excerpt || content.substring(0, 200),
       readTime: readTime || Math.ceil(content.length / 200),
       author: user.userId

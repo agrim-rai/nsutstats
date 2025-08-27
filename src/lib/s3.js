@@ -25,11 +25,23 @@ export async function uploadFileToS3(file, fileName, contentType) {
       body = Buffer.from(file);
     }
 
+    // Determine content disposition based on content type
+    const isImage = resolvedContentType && resolvedContentType.startsWith('image/');
+    const contentDisposition = isImage 
+      ? 'inline' // Display images inline in browser
+      : `attachment; filename="${fileName.split('/').pop()}"`; // Download other files
+    
     const command = new PutObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
       Body: body,
       ContentType: resolvedContentType || 'application/octet-stream',
+      ContentDisposition: contentDisposition,
+      Metadata: {
+        'original-name': fileName.split('/').pop() || 'file',
+        'upload-timestamp': new Date().toISOString(),
+        'file-type': resolvedContentType || 'application/octet-stream'
+      }
     });
 
     await s3Client.send(command);
@@ -71,7 +83,7 @@ export async function uploadInlineImageToS3(file, imageId) {
     const sanitizedOriginal = (file?.name || 'image').replace(/[^a-zA-Z0-9.-]/g, '');
     const fileName = `attachments/inline-images/${imageId}-${sanitizedOriginal}`;
 
-    const fileUrl = await uploadFileToS3(file, fileName, file?.type || 'application/octet-stream');
+    const fileUrl = await uploadFileToS3(file, fileName, file?.type || 'image/jpeg');
 
     return {
       imageId,
