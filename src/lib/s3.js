@@ -30,7 +30,6 @@ export async function uploadFileToS3(file, fileName, contentType) {
       Key: key,
       Body: body,
       ContentType: resolvedContentType || 'application/octet-stream',
-      ACL: 'public-read',
     });
 
     await s3Client.send(command);

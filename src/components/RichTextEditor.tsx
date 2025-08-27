@@ -199,6 +199,8 @@ export default function RichTextEditor({
     try {
       const { imageId, fileUrl } = await uploadInlineImageToS3(file)
       
+      console.log('Image uploaded successfully:', { imageId, fileUrl })
+      
       // Store image metadata for later saving with post
       if (onInlineImageUpload) {
         onInlineImageUpload(imageId, {
@@ -211,19 +213,32 @@ export default function RichTextEditor({
         })
       }
       
-      // Insert image then attach special data attribute for tracking
-      editor?.chain()
-        .focus()
-        .setImage({ src: fileUrl, alt: file.name })
-        .updateAttributes('image', { 'data-image-id': imageId })
-        .run()
+      // Wait a moment then insert image to ensure editor is ready
+      setTimeout(() => {
+        // Insert image and then update attributes to include tracking data
+        editor?.chain()
+          .focus()
+          .setImage({ 
+            src: fileUrl, 
+            alt: file.name
+          })
+          .updateAttributes('image', { 'data-image-id': imageId })
+          .run()
+        
+        console.log('Image inserted successfully')
+        console.log('Current editor content:', editor?.getHTML())
+        
+        // Turn off loading state after image is inserted
+        setIsUploading(false)
+      }, 100)
       
       return true
     } catch (error) {
       console.error('Failed to upload pasted image:', error)
-      return false
-    } finally {
+      // Show user-friendly error message
+      alert('Failed to upload image: ' + (error instanceof Error ? error.message : 'Unknown error'))
       setIsUploading(false)
+      return false
     }
   }, [onInlineImageUpload])
 
@@ -235,6 +250,26 @@ export default function RichTextEditor({
       Image.configure({
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-lg shadow-md my-4',
+        },
+        allowBase64: true,
+        inline: false,
+      }).extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            'data-image-id': {
+              default: null,
+              parseHTML: element => element.getAttribute('data-image-id'),
+              renderHTML: attributes => {
+                if (!attributes['data-image-id']) {
+                  return {}
+                }
+                return {
+                  'data-image-id': attributes['data-image-id'],
+                }
+              },
+            },
+          }
         },
       }),
       CodeBlockLowlight.configure({
@@ -285,6 +320,8 @@ export default function RichTextEditor({
           // Use inline image upload for consistency
           const { imageId, fileUrl } = await uploadInlineImageToS3(file)
           
+          console.log('Image uploaded successfully:', { imageId, fileUrl })
+          
           // Store image metadata for later saving with post
           if (onInlineImageUpload) {
             onInlineImageUpload(imageId, {
@@ -297,15 +334,28 @@ export default function RichTextEditor({
             })
           }
           
-          // Insert image then attach special data attribute for tracking
-          editor?.chain()
-            .focus()
-            .setImage({ src: fileUrl, alt: file.name })
-            .updateAttributes('image', { 'data-image-id': imageId })
-            .run()
+          // Wait a moment then insert image to ensure editor is ready
+          setTimeout(() => {
+            // Insert image and then update attributes to include tracking data
+            editor?.chain()
+              .focus()
+              .setImage({ 
+                src: fileUrl, 
+                alt: file.name
+              })
+              .updateAttributes('image', { 'data-image-id': imageId })
+              .run()
+            
+            console.log('Image inserted successfully')
+            console.log('Current editor content:', editor?.getHTML())
+            
+            // Turn off loading state after image is inserted
+            setIsUploading(false)
+          }, 100)
         } catch (error) {
           console.error('Image upload failed:', error)
-        } finally {
+          // Show user-friendly error message
+          alert('Failed to upload image: ' + (error instanceof Error ? error.message : 'Unknown error'))
           setIsUploading(false)
         }
       }
@@ -352,7 +402,7 @@ export default function RichTextEditor({
         <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm text-blue-600">Uploading image...</span>
+            <span className="text-sm text-blue-600">Uploading image... Please wait.</span>
           </div>
         </div>
       )}
