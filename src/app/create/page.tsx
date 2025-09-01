@@ -112,7 +112,7 @@ export default function CreatePost() {
       }
 
       // Redirect to the new post
-      router.push(`/posts/${data.post._id}`)
+      router.push(`/posts/${data.post.slug}`)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to create post')
     } finally {

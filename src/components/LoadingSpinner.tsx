@@ -36,9 +36,9 @@ export default function LoadingSpinner({
       <div className={`animate-pulse ${className}`}>
         <div className="flex justify-center items-center min-h-64">
           <div className="text-center w-full max-w-md">
-            <div className="w-8 h-8 bg-gray-300 rounded-full mx-auto mb-4"></div>
-            <div className="h-4 bg-gray-300 rounded w-32 mx-auto mb-2"></div>
-            <div className="h-3 bg-gray-300 rounded w-24 mx-auto"></div>
+            <div className="w-8 h-8 bg-slate-600 rounded-full mx-auto mb-4"></div>
+            <div className="h-4 bg-slate-600 rounded w-32 mx-auto mb-2"></div>
+            <div className="h-3 bg-slate-600 rounded w-24 mx-auto"></div>
           </div>
         </div>
       </div>
@@ -53,12 +53,13 @@ export default function LoadingSpinner({
     <div className={`flex justify-center items-center min-h-64 ${className}`}>
       <div className="text-center">
         <div 
-          className={`${sizeClasses[size]} border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4 animate-spin`}
+          className={`${sizeClasses[size]} border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4 animate-spin`}
           style={{
-            animation: 'spin 1s linear infinite'
+            animation: 'spin 1s linear infinite',
+            boxShadow: '0 0 20px rgba(99, 102, 241, 0.3)'
           }}
         ></div>
-        <p className="text-gray-600 animate-pulse">{text}</p>
+        <p className="text-slate-300 animate-pulse">{text}</p>
       </div>
     </div>
   )

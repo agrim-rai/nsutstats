@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+ import mongoose from 'mongoose';
 
 const attachmentSchema = new mongoose.Schema({
   fileName: {
@@ -61,6 +61,13 @@ const postSchema = new mongoose.Schema({
     trim: true,
     maxlength: 200
   },
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    maxlength: 250
+  },
   content: {
     type: String,
     required: true,
@@ -118,7 +125,51 @@ const postSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Helper function to generate slug from title
+function generateSlug(title) {
+  let slug = title
+    .toLowerCase()
+    .trim()
+    // Replace accented characters with their base equivalents
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    // Replace spaces with hyphens
+    .replace(/\s+/g, '-')
+    // Remove special characters except hyphens and alphanumeric
+    .replace(/[^a-z0-9-]/g, '')
+    // Remove multiple consecutive hyphens
+    .replace(/-+/g, '-')
+    // Remove leading/trailing hyphens
+    .replace(/^-+|-+$/g, '');
+  
+  // If slug is empty, generate a random one based on timestamp
+  if (!slug) {
+    slug = `post-${Date.now()}`;
+  }
+  
+  return slug;
+}
+
 // Create excerpt from content if not provided
+postSchema.pre('validate', async function(next) {
+  // Generate slug from title if not provided or if title changed
+  if (!this.slug || this.isModified('title')) {
+    let baseSlug = generateSlug(this.title);
+    let uniqueSlug = baseSlug;
+    let counter = 1;
+    
+    // Check for slug uniqueness
+    while (await this.constructor.findOne({ slug: uniqueSlug, _id: { $ne: this._id } })) {
+      uniqueSlug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    
+    this.slug = uniqueSlug;
+  }
+  
+  next();
+});
+
 postSchema.pre('save', function(next) {
   if (!this.excerpt && this.content) {
     this.excerpt = this.content.substring(0, 200) + (this.content.length > 200 ? '...' : '');

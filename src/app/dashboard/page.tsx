@@ -58,12 +58,12 @@ export default function Dashboard() {
     }
   }
 
-  const handleDeletePost = async (postId: string) => {
+  const handleDeletePost = async (postSlug: string) => {
     if (!confirm('Are you sure you want to delete this post?')) return
 
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/posts/${postId}`, {
+      const response = await fetch(`/api/posts/slug/${postSlug}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -75,7 +75,7 @@ export default function Dashboard() {
       }
 
       // Remove the post from the list
-      setPosts(posts.filter(post => post._id !== postId))
+      setPosts(posts.filter(post => post.slug !== postSlug))
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete post')
     }
@@ -159,7 +159,7 @@ export default function Dashboard() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        <Link href={`/posts/${post._id}`} className="hover:text-blue-600">
+                        <Link href={`/posts/${post.slug}`} className="hover:text-blue-600">
                           {post.title}
                         </Link>
                       </h3>
@@ -211,21 +211,21 @@ export default function Dashboard() {
                   
                   <div className="flex items-center space-x-2 ml-4">
                     <Link
-                      href={`/posts/${post._id}`}
+                      href={`/posts/${post.slug}`}
                       className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
                       title="View post"
                     >
                       <Eye className="h-4 w-4" />
                     </Link>
                     <Link
-                      href={`/posts/${post._id}/edit`}
+                      href={`/posts/${post.slug}/edit`}
                       className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md"
                       title="Edit post"
                     >
                       <Edit className="h-4 w-4" />
                     </Link>
                     <button
-                      onClick={() => handleDeletePost(post._id)}
+                      onClick={() => handleDeletePost(post.slug)}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md"
                       title="Delete post"
                     >

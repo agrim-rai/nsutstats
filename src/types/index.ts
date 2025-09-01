@@ -30,6 +30,7 @@ export interface InlineImage {
 export interface Post {
   _id: string;
   title: string;
+  slug: string;
   content: string;
   richContent?: any; // Tiptap JSON content
   excerpt: string;

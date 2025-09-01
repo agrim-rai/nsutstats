@@ -26,23 +26,30 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white shadow-sm border-b">
+    <nav style={{ 
+      background: 'var(--background-card)', 
+      borderBottom: '1px solid var(--border-color)',
+      boxShadow: 'var(--shadow-md)'
+    }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-gray-900">
+            <Link 
+              href="/" 
+              className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent hover:from-indigo-300 hover:to-purple-300 transition-all duration-200"
+            >
               NSUT Stats
             </Link>
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-gray-900 transition-colors">
+            <Link href="/" className="text-slate-300 hover:text-white transition-colors">
               Home
             </Link>
-            <Link href="/categories" className="text-gray-700 hover:text-gray-900 transition-colors">
+            <Link href="/categories" className="text-slate-300 hover:text-white transition-colors">
               Categories
             </Link>
-            <Link href="/tags" className="text-gray-700 hover:text-gray-900 transition-colors">
+            <Link href="/tags" className="text-slate-300 hover:text-white transition-colors">
               Tags
             </Link>
             {user ? (
@@ -50,7 +57,7 @@ export default function Navbar() {
                 {user.role === 'admin' && (
                   <Link 
                     href="/create" 
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
                   >
                     <Plus className="h-4 w-4" />
                     <span>New Post</span>
@@ -59,20 +66,20 @@ export default function Navbar() {
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     {user.role === 'admin' ? (
-                      <Shield className="h-4 w-4 text-blue-600" />
+                      <Shield className="h-4 w-4 text-cyan-400" />
                     ) : (
-                      <User className="h-4 w-4" />
+                      <User className="h-4 w-4 text-slate-300" />
                     )}
-                    <span className="text-sm text-gray-700 font-medium">
+                    <span className="text-sm text-slate-200 font-medium">
                       {user.username}
                       {user.role === 'admin' && (
-                        <span className="ml-1 text-xs text-blue-600">(Admin)</span>
+                        <span className="ml-1 text-xs text-cyan-400">(Admin)</span>
                       )}
                     </span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors"
+                    className="flex items-center space-x-2 text-slate-300 hover:text-white transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
@@ -81,12 +88,12 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link href="/login" className="text-gray-700 hover:text-gray-900 transition-colors">
+                <Link href="/login" className="text-slate-300 hover:text-white transition-colors">
                   Login
                 </Link>
                 <Link 
                   href="/register" 
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   Sign Up
                 </Link>
@@ -97,7 +104,7 @@ export default function Navbar() {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-gray-900 transition-colors"
+              className="text-slate-300 hover:text-white transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -106,42 +113,42 @@ export default function Navbar() {
 
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
-              <Link href="/" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-slate-600">
+              <Link href="/" className="block px-3 py-2 text-slate-300 hover:text-white transition-colors">
                 Home
               </Link>
-              <Link href="/categories" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
+              <Link href="/categories" className="block px-3 py-2 text-slate-300 hover:text-white transition-colors">
                 Categories
               </Link>
-              <Link href="/tags" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
+              <Link href="/tags" className="block px-3 py-2 text-slate-300 hover:text-white transition-colors">
                 Tags
               </Link>
               {user ? (
                 <>
                   {user.role === 'admin' && (
-                    <Link href="/create" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
+                    <Link href="/create" className="block px-3 py-2 text-slate-300 hover:text-white transition-colors">
                       New Post
                     </Link>
                   )}
-                  <div className="px-3 py-2 text-sm text-gray-500">
+                  <div className="px-3 py-2 text-sm text-slate-400">
                     Welcome, {user.username}
                     {user.role === 'admin' && (
-                      <span className="ml-1 text-blue-600">(Admin)</span>
+                      <span className="ml-1 text-cyan-400">(Admin)</span>
                     )}
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+                    className="block w-full text-left px-3 py-2 text-slate-300 hover:text-white transition-colors"
                   >
                     Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
+                  <Link href="/login" className="block px-3 py-2 text-slate-300 hover:text-white transition-colors">
                     Login
                   </Link>
-                  <Link href="/register" className="block px-3 py-2 text-gray-700 hover:text-gray-900 transition-colors">
+                  <Link href="/register" className="block px-3 py-2 text-slate-300 hover:text-white transition-colors">
                     Sign Up
                   </Link>
                 </>
