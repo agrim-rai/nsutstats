@@ -13,11 +13,13 @@ export default function LoadingSpinner({
   text = 'Loading...', 
   className = '',
   variant = 'spinner',
-  minLoadingTime = 500 // Default 500ms minimum loading time
+  minLoadingTime = 0 // Default 0ms - let parent control loading state
 }: LoadingSpinnerProps) {
   const [showSpinner, setShowSpinner] = useState(true)
   
   useEffect(() => {
+    if (minLoadingTime <= 0) return
+    
     const timer = setTimeout(() => {
       setShowSpinner(false)
     }, minLoadingTime)
@@ -45,7 +47,7 @@ export default function LoadingSpinner({
     )
   }
 
-  if (!showSpinner) {
+  if (minLoadingTime > 0 && !showSpinner) {
     return null
   }
 

@@ -22,13 +22,19 @@ export default function PostPage() {
   const [error, setError] = useState('')
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
-  const fetchPost = useCallback(async () => {
+  const fetchPost = useCallback(async (retryCount = 0) => {
     try {
+      setLoading(true)
+      setError('')
+      
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
       
       const response = await fetch(`/api/posts/slug/${params.slug}`, {
-        signal: controller.signal
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
       })
       clearTimeout(timeoutId)
       
@@ -41,6 +47,11 @@ export default function PostPage() {
       setPost(data.post)
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
+        if (retryCount < 2) {
+          // Retry once more with a longer timeout
+          setTimeout(() => fetchPost(retryCount + 1), 1000)
+          return
+        }
         setError('Request timed out. Please try again.')
       } else {
         setError(error instanceof Error ? error.message : 'Failed to load post')
@@ -176,12 +187,20 @@ export default function PostPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Error</h1>
           <p className="text-slate-300 mb-6">{error}</p>
-          <Link 
-            href="/" 
-            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
-          >
-            Go Home
-          </Link>
+          <div className="flex gap-4 justify-center">
+            <button 
+              onClick={() => fetchPost()} 
+              className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all"
+            >
+              Try Again
+            </button>
+            <Link 
+              href="/" 
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
+            >
+              Go Home
+            </Link>
+          </div>
         </div>
       </div>
     )

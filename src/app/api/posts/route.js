@@ -33,13 +33,24 @@ export async function GET(request) {
       query.$text = { $search: search };
     }
     
-    const posts = await Post.find(query)
+    // Use Promise.race to add timeout to database operations
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Database query timed out')), 10000)
+    );
+    
+    const postsPromise = Post.find(query)
       .populate('author', 'username avatar')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean(); // Use lean() for better performance
     
-    const total = await Post.countDocuments(query);
+    const totalPromise = Post.countDocuments(query);
+    
+    const [posts, total] = await Promise.race([
+      Promise.all([postsPromise, totalPromise]),
+      timeout
+    ]);
     
     return NextResponse.json({
       posts,
@@ -53,8 +64,14 @@ export async function GET(request) {
     
   } catch (error) {
     console.error('Get posts error:', error);
+    if (error.message === 'Database query timed out') {
+      return NextResponse.json(
+        { error: 'Request timed out. Please try again.' },
+        { status: 408 }
+      );
+    }
     return NextResponse.json(
-      { error: 'server error ' },
+      { error: 'Failed to load posts. Please try again.' },
       { status: 500 }
     );
   }

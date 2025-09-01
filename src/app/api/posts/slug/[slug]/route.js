@@ -11,9 +11,17 @@ export async function GET(request, { params }) {
     
     const { slug } = await params;
     
-    const post = await Post.findOne({ slug })
+    // Add timeout to database operations
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Database query timed out')), 10000)
+    );
+    
+    const postPromise = Post.findOne({ slug })
       .populate('author', 'username avatar bio')
-      .populate('likes', 'username');
+      .populate('likes', 'username')
+      .lean();
+    
+    const post = await Promise.race([postPromise, timeout]);
     
     if (!post) {
       return NextResponse.json(
@@ -22,16 +30,23 @@ export async function GET(request, { params }) {
       );
     }
     
-    // Increment views
-    post.views += 1;
-    await post.save();
+    // Increment views asynchronously to avoid blocking response
+    Post.findByIdAndUpdate(post._id, { $inc: { views: 1 } })
+      .exec()
+      .catch(error => console.error('Failed to increment views:', error));
     
     return NextResponse.json({ post });
     
   } catch (error) {
     console.error('Get post by slug error:', error);
+    if (error.message === 'Database query timed out') {
+      return NextResponse.json(
+        { error: 'Request timed out. Please try again.' },
+        { status: 408 }
+      );
+    }
     return NextResponse.json(
-      { error: 'server error' },
+      { error: 'Failed to load post. Please try again.' },
       { status: 500 }
     );
   }

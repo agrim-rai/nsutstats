@@ -6,44 +6,53 @@ import { Calendar, Clock, User } from 'lucide-react'
 import { Post } from '@/types'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import SearchBar from '@/components/SearchBar'
-import { useLoading } from '@/lib/useLoading'
+
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<Post[]>([])
-  
-  const { loading, error, withLoading } = useLoading({ minLoadingTime: 300 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchPosts = useCallback(async () => {
-    // Add timeout to prevent long loading times
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
-    
-    const response = await fetch(`/api/posts`, {
-      signal: controller.signal
-    })
-    clearTimeout(timeoutId)
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch posts')
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Add timeout to prevent long loading times
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000) // 15 second timeout
+      
+      const response = await fetch(`/api/posts`, {
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch posts')
+      }
+      
+      const data = await response.json()
+      setPosts(data.posts || [])
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        setError('Request timed out. Please try again.')
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to load posts')
+      }
+    } finally {
+      setLoading(false)
     }
-    
-    const data = await response.json()
-    setPosts(data.posts || [])
   }, [])
 
   useEffect(() => {
-    // Fetch data in parallel for better performance using the loading hook
-    const fetchData = async () => {
-      await withLoading(async () => {
-        await fetchPosts()
-      })
-    }
-    
-    fetchData()
-  }, [fetchPosts, withLoading])
+    fetchPosts()
+  }, [fetchPosts])
 
   const handleSearch = useCallback(async (query: string) => {
     setSearchQuery(query)
@@ -96,7 +105,7 @@ export default function Home() {
           {error}
         </div>
         <button 
-          onClick={() => window.location.reload()} 
+          onClick={fetchPosts} 
           className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
         >
           Try Again
