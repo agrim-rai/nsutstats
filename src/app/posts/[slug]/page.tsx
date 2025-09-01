@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, Code, Download, ExternalLink, Archive, BookOpen, ZoomIn, X } from 'lucide-react'
+import { Calendar, Clock, User, Eye, MessageCircle, Edit, Trash2, Send, File, Image, X } from 'lucide-react'
 import { Post, Comment } from '@/types'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import RichContentRenderer from '@/components/RichContentRenderer'
+import ImageAttachment from '@/components/ImageAttachment'
+import FileAttachment from '@/components/FileAttachment'
 
 export default function PostPage() {
   const params = useParams()
@@ -162,21 +164,7 @@ export default function PostPage() {
     })
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="h-4 w-4" />
-    if (fileType.includes('pdf')) return <File className="h-4 w-4" />
-    if (fileType.includes('code') || fileType.includes('text')) return <Code className="h-4 w-4" />
-    if (fileType.includes('archive')) return <Archive className="h-4 w-4" />
-    return <File className="h-4 w-4" />
-  }
 
   if (loading) {
     return <LoadingSpinner />
@@ -323,32 +311,58 @@ export default function PostPage() {
             {/* Attachments */}
             {post.attachments && post.attachments.length > 0 && (
               <div className="mt-8 pt-8 border-t border-slate-700">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center">
                   <File className="h-5 w-5 mr-2 text-cyan-400" />
-                  Attachments
+                  Attachments ({post.attachments.length})
                 </h3>
-                <div className="grid gap-3">
-                  {post.attachments.map((attachment, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {getFileIcon(attachment.fileType)}
+                
+                {/* Separate images and other files */}
+                {(() => {
+                  const images = post.attachments.filter(att => att.fileType.startsWith('image/'))
+                  const otherFiles = post.attachments.filter(att => !att.fileType.startsWith('image/'))
+                  
+                  return (
+                    <div className="space-y-6">
+                      {/* Image Attachments */}
+                      {images.length > 0 && (
                         <div>
-                          <p className="text-white font-medium">{attachment.originalName}</p>
-                          <p className="text-slate-400 text-sm">{formatFileSize(attachment.fileSize)}</p>
+                          <h4 className="text-md font-medium text-slate-300 mb-4 flex items-center">
+                            <Image className="h-4 w-4 mr-2 text-cyan-400" />
+                            Images ({images.length})
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {images.map((attachment, index) => (
+                              <ImageAttachment
+                                key={`image-${index}`}
+                                attachment={attachment}
+                                index={index}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                      <a
-                        href={attachment.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors"
-                      >
-                        <Download className="h-4 w-4" />
-                        <span>Download</span>
-                      </a>
+                      )}
+                      
+                      {/* Other File Attachments */}
+                      {otherFiles.length > 0 && (
+                        <div>
+                          <h4 className="text-md font-medium text-slate-300 mb-4 flex items-center">
+                            <File className="h-4 w-4 mr-2 text-cyan-400" />
+                            Files ({otherFiles.length})
+                          </h4>
+                          <div className="grid gap-3">
+                            {otherFiles.map((attachment, index) => (
+                              <FileAttachment
+                                key={`file-${index}`}
+                                attachment={attachment}
+                                index={index}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  )
+                })()}
               </div>
             )}
           </div>
